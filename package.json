@@ -1,0 +1,37 @@
+{
+  "name": "k6-jest",
+  "version": "0.1.0",
+  "description": "Jest-style describe/test/beforeEach API for k6",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "k6",
+    "testing",
+    "jest",
+    "describe",
+    "k6-lib"
+  ],
+  "peerDependencies": {
+    "k6": "*"
+  },
+  "devDependencies": {
+    "@types/k6": "^1.0.0",
+    "esbuild": "^0.28.0",
+    "typescript": "^5.8.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && node scripts/build-esm.mjs",
+    "test": "k6 run tests/self-test.k6.ts"
+  }
+}
