@@ -1,4 +1,4 @@
-# k6-jest
+# k6-jest-style
 
 Jest-style `describe / test / beforeEach / afterEach` syntax for [k6](https://k6.io/) load tests. Zero runtime
 dependencies beyond k6 built-ins. TypeScript-first.
