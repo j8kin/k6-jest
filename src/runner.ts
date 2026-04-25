@@ -2,38 +2,41 @@ import { group, check } from 'k6';
 import { getConfig } from './configure.ts';
 import type { SuiteNode, TestNode, HookFn, TestSuite } from './types.ts';
 
-async function safeRun(fn: () => void | Promise<void>): Promise<{ ok: boolean; error?: string }> {
-  try { await fn(); return { ok: true }; }
-  catch (e: unknown) { return { ok: false, error: e instanceof Error ? e.message : String(e) }; }
-}
-
-function resolveOnly(tests: TestNode[]): TestNode[] {
-  return tests.some(t => t.only) ? tests.filter(t => t.only) : tests;
-}
-
-async function runHooks(hooks: HookFn[]): Promise<{ ok: boolean; error?: string }> {
-  for (const h of hooks) {
-    const r = await safeRun(h);
-    if (!r.ok) return r;
-  }
-  return { ok: true };
-}
-
 interface CheckEntry {
   name: string;
   ok: boolean;
 }
 
-async function collectSuite(
+const safeRun = async (fn: () => void | Promise<void>): Promise<{ ok: boolean; error?: string }> => {
+  try {
+    await fn();
+    return { ok: true };
+  } catch (e: unknown) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+  }
+};
+
+const resolveOnly = (tests: TestNode[]): TestNode[] =>
+  tests.some((t) => t.only) ? tests.filter((t) => t.only) : tests;
+
+const runHooks = async (hooks: HookFn[]): Promise<{ ok: boolean; error?: string }> => {
+  for (const h of hooks) {
+    const r = await safeRun(h);
+    if (!r.ok) return r;
+  }
+  return { ok: true };
+};
+
+const collectSuite = async (
   node: SuiteNode,
   parentPath: string,
   inheritedBeforeEach: HookFn[],
-  inheritedAfterEach: HookFn[],
-): Promise<{ path: string; entries: CheckEntry[] }[]> {
+  inheritedAfterEach: HookFn[]
+): Promise<{ path: string; entries: CheckEntry[] }[]> => {
   const { nameSeparator } = getConfig();
   const fullPath = parentPath ? `${parentPath}${nameSeparator}${node.name}` : node.name;
   const allBeforeEach = [...inheritedBeforeEach, ...node.beforeEach];
-  const allAfterEach  = [...node.afterEach, ...inheritedAfterEach]; // innermost-first
+  const allAfterEach = [...node.afterEach, ...inheritedAfterEach]; // innermost-first
 
   if (node.skipped) return [];
 
@@ -77,9 +80,9 @@ async function collectSuite(
   await runHooks(node.afterAll);
 
   return [{ path: fullPath, entries }, ...childGroups];
-}
+};
 
-function reportGroups(groups: { path: string; entries: CheckEntry[] }[]): void {
+const reportGroups = (groups: { path: string; entries: CheckEntry[] }[]): void => {
   // Report leaf groups first, building up from innermost to ensure correct nesting.
   // We report all as flat groups since k6 1.x does not support async group callbacks.
   for (const g of groups) {
@@ -91,23 +94,28 @@ function reportGroups(groups: { path: string; entries: CheckEntry[] }[]): void {
       }
     });
   }
-}
+};
 
-async function runSuite(node: SuiteNode): Promise<void> {
+const runSuite = async (node: SuiteNode): Promise<void> => {
   const groups = await collectSuite(node, '', [], []);
   reportGroups(groups);
-}
+};
 
-function countTests(node: SuiteNode): number {
+const countTests = (node: SuiteNode): number => {
   if (node.skipped) return 0;
-  return node.tests.filter(t => !t.skipped).length
-    + node.children.reduce((n, c) => n + countTests(c), 0);
-}
+  return node.tests.filter((t) => !t.skipped).length + node.children.reduce((n, c) => n + countTests(c), 0);
+};
 
-export function buildTestSuite(node: SuiteNode): TestSuite {
+export const buildTestSuite = (node: SuiteNode): TestSuite => {
   return {
-    get name() { return node.name; },
-    get testCount() { return countTests(node); },
-    async run() { await runSuite(node); },
+    get name() {
+      return node.name;
+    },
+    get testCount() {
+      return countTests(node);
+    },
+    async run() {
+      await runSuite(node);
+    },
   };
-}
+};

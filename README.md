@@ -4,36 +4,38 @@ Jest-style `describe / test / beforeEach / afterEach` syntax for [k6](https://k6
 dependencies beyond k6 built-ins. TypeScript-first.
 
 ```typescript
-import {describe, beforeEach, afterEach, test, suiteOptions} from 'k6-jest';
+import { describe, beforeEach, afterEach, test, suiteOptions } from 'k6-jest';
 import http from 'k6/http';
-import {check} from 'k6';
+import { check } from 'k6';
 
 const suite = describe('Users API', () => {
-    let userId: string;
+  let userId: string;
 
-    beforeEach(() => {
-        const res = http.post('/users', JSON.stringify({name: 'alice'}));
-        userId = JSON.parse(res.body as string).id;
-    });
+  beforeEach(() => {
+    const res = http.post('/users', JSON.stringify({ name: 'alice' }));
+    userId = JSON.parse(res.body as string).id;
+  });
 
-    afterEach(() => {
-        http.del(`/users/${userId}`);
-    });
+  afterEach(() => {
+    http.del(`/users/${userId}`);
+  });
 
-    test('GET returns 200', () => {
-        const res = http.get(`/users/${userId}`);
-        check(res, {'status is 200': (r) => r.status === 200});
-    });
+  test('GET returns 200', () => {
+    const res = http.get(`/users/${userId}`);
+    check(res, { 'status is 200': (r) => r.status === 200 });
+  });
 
-    test('GET returns correct body', () => {
-        const res = http.get(`/users/${userId}`);
-        check(res, {'name matches': () => JSON.parse(res.body as string).name === 'alice'});
+  test('GET returns correct body', () => {
+    const res = http.get(`/users/${userId}`);
+    check(res, {
+      'name matches': () => JSON.parse(res.body as string).name === 'alice',
     });
+  });
 });
 
 export const options = suiteOptions(suite);
 export default async function () {
-    await suite.run();
+  await suite.run();
 }
 ```
 
@@ -47,10 +49,10 @@ Import in your k6 script:
 
 ```typescript
 // ESM (k6 native)
-import {describe, test, suiteOptions} from 'k6-jest';
+import { describe, test, suiteOptions } from 'k6-jest';
 
 // CommonJS (bundler / webpack)
-const {describe, test, suiteOptions} = require('k6-jest');
+const { describe, test, suiteOptions } = require('k6-jest');
 ```
 
 ## API
@@ -62,7 +64,7 @@ the module level (k6 init context), not inside `run()` or `export default`.
 
 ```typescript
 const suite = describe('My Suite', () => {
-    // register hooks and tests here
+  // register hooks and tests here
 });
 ```
 
@@ -75,13 +77,13 @@ Registers a test inside a `describe` callback. `fn` may be async.
 
 ```typescript
 test('does something', async () => {
-    const result = await myAsyncOp();
-    check(null, {'result is ok': () => result.ok});
+  const result = await myAsyncOp();
+  check(null, { 'result is ok': () => result.ok });
 });
 ```
 
 | Variant               | Behaviour                                              |
-|-----------------------|--------------------------------------------------------|
+| --------------------- | ------------------------------------------------------ |
 | `test(name, fn)`      | Normal test                                            |
 | `test.skip(name, fn)` | Registers but never executes                           |
 | `test.only(name, fn)` | Only this test runs in the suite; siblings are skipped |
@@ -94,14 +96,18 @@ Hooks are scoped to the `describe` block they are declared in. All hook function
 
 ```typescript
 describe('Suite', () => {
-    beforeAll(async () => { /* runs once before all tests */
-    });
-    afterAll(async () => {  /* runs once after all tests  */
-    });
-    beforeEach(() => {      /* runs before every test     */
-    });
-    afterEach(() => {       /* runs after every test      */
-    });
+  beforeAll(async () => {
+    /* runs once before all tests */
+  });
+  afterAll(async () => {
+    /* runs once after all tests  */
+  });
+  beforeEach(() => {
+    /* runs before every test     */
+  });
+  afterEach(() => {
+    /* runs after every test      */
+  });
 });
 ```
 
@@ -134,7 +140,7 @@ export const options = suiteOptions(suite);
 // { vus: 1, iterations: 1, thresholds: { checks: ['rate==1.0'] } }
 
 // Override any field:
-export const options = suiteOptions(suite, {duration: '30s', vus: 5});
+export const options = suiteOptions(suite, { duration: '30s', vus: 5 });
 ```
 
 ### `mergeSuites(...suites)` — combine multiple suites
@@ -142,14 +148,14 @@ export const options = suiteOptions(suite, {duration: '30s', vus: 5});
 Creates a virtual root suite that runs each child in declaration order. Useful for splitting suites across files.
 
 ```typescript
-import {authSuite} from './suites/auth.ts';
-import {productSuite} from './suites/products.ts';
+import { authSuite } from './suites/auth.ts';
+import { productSuite } from './suites/products.ts';
 
 const all = mergeSuites(authSuite, productSuite);
 
 export const options = suiteOptions(all);
 export default async function () {
-    await all.run();
+  await all.run();
 }
 ```
 
@@ -158,12 +164,12 @@ export default async function () {
 Must be called **before** any `describe()` call. Calling it inside `describe` or `run()` is a no-op and logs a warning.
 
 ```typescript
-import {configure} from 'k6-jest';
+import { configure } from 'k6-jest';
 
 configure({
-    nameSeparator: ' > ',         // default: ' > '
-    continueOnHookFailure: true,  // default: true
-    verbose: false,               // default: false
+  nameSeparator: ' > ', // default: ' > '
+  continueOnHookFailure: true, // default: true
+  verbose: false, // default: false
 });
 ```
 
@@ -174,22 +180,25 @@ inner suites.
 
 ```typescript
 describe('Auth', () => {
-    let token: string;
+  let token: string;
 
-    describe('Login', () => {
-        test('valid credentials return token', async () => { /* ... */
-        });
-        test('invalid credentials return 401', async () => { /* ... */
-        });
+  describe('Login', () => {
+    test('valid credentials return token', async () => {
+      /* ... */
     });
+    test('invalid credentials return 401', async () => {
+      /* ... */
+    });
+  });
 
-    describe('Logout', () => {
-        beforeEach(async () => {
-            token = await getToken();
-        });
-        test('valid token returns 200', async () => { /* ... */
-        });
+  describe('Logout', () => {
+    beforeEach(async () => {
+      token = await getToken();
     });
+    test('valid token returns 200', async () => {
+      /* ... */
+    });
+  });
 });
 ```
 
@@ -197,16 +206,19 @@ describe('Auth', () => {
 
 ```typescript
 describe('Feature', () => {
-    test('runs normally', () => { /* ... */
-    });
-    test.skip('not implemented yet', () => { /* ... */
-    });
+  test('runs normally', () => {
+    /* ... */
+  });
+  test.skip('not implemented yet', () => {
+    /* ... */
+  });
 });
 
 // Skip an entire suite
 describe.skip('Blocked by JIRA-123', () => {
-    test('never runs', () => { /* ... */
-    });
+  test('never runs', () => {
+    /* ... */
+  });
 });
 ```
 
@@ -227,7 +239,7 @@ The separator (`>`) is configurable via `configure({ nameSeparator })`.
 k6 evaluates scripts in two phases. `k6-jest` is designed around this constraint:
 
 | Phase                | When                   | What k6-jest does                             |
-|----------------------|------------------------|-----------------------------------------------|
+| -------------------- | ---------------------- | --------------------------------------------- |
 | **Init context**     | Once per VU at startup | `describe()` builds the `SuiteNode` tree      |
 | **Default function** | Once per VU iteration  | `suite.run()` traverses and executes the tree |
 

@@ -28,10 +28,13 @@
   "devDependencies": {
     "@types/k6": "^1.0.0",
     "esbuild": "^0.28.0",
-    "typescript": "^5.8.0"
+    "typescript": "^6.0.3",
+    "prettier": "^3.8.3"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json && node scripts/build-esm.mjs",
-    "test": "k6 run __tests__/self-test.k6.ts"
+    "test": "k6 run __tests__/self-test.k6.ts",
+    "format": "prettier --write .",
+    "format-check": "prettier --check ."
   }
 }
