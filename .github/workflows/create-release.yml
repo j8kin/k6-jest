@@ -3,7 +3,7 @@ name: Create Release
 on:
   push:
     branches:
-      - release
+      - master
 
 jobs:
   tag-release:
@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: release
+          ref: master
           fetch-depth: 0
 
       - name: Read version
@@ -47,7 +47,7 @@ jobs:
       - name: Create GitHub Release
         run: |
           gh release create "v${{ steps.version.outputs.version }}" \
-            --target release \
+            --target master \
             --title "Release v${{ steps.version.outputs.version }}" \
             --notes "${{ steps.release-notes.outputs.notes }}"
         env:
